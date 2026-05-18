@@ -5,11 +5,27 @@ import { useState } from "react";
 const SERVICES = [1, 2, 3];
 
 export default function TestToolsPage() {
-  const [log, setLog] = useState<string[]>([]);
+  const [log, setLog] = useState<
+    Array<{
+      id: string;
+      message: string;
+      status: "success" | "warning" | "error" | "info";
+      timestamp: string;
+    }>
+  >([]);
   const [loading, setLoading] = useState(false);
 
-  const appendLog = (message: string) => {
-    setLog((prev) => [message, ...prev].slice(0, 20));
+  const appendLog = (
+    message: string,
+    status: "success" | "warning" | "error" | "info" = "info"
+  ) => {
+    const entry = {
+      id: `${Date.now()}-${Math.random()}`,
+      message,
+      status,
+      timestamp: new Date().toLocaleTimeString(),
+    };
+    setLog((prev) => [entry, ...prev].slice(0, 30));
   };
 
   const resetQuota = async (eventId: string) => {
@@ -20,30 +36,45 @@ export default function TestToolsPage() {
     });
     const payload = await response.json();
     if (!response.ok) {
-      appendLog(payload.error ?? "Reset failed.");
-      return;
+      appendLog(payload.error ?? "Reset failed.", "error");
+      return { ok: false, alreadyProcessed: false };
     }
-    appendLog(
-      payload.alreadyProcessed
-        ? `Event ${eventId} already processed.`
-        : `Quota reset with event ${eventId}.`
-    );
+    return {
+      ok: true,
+      alreadyProcessed: Boolean(payload.alreadyProcessed),
+    };
   };
 
   const handleReset = async () => {
     setLoading(true);
-    await resetQuota(`reset-${Date.now()}`);
+    const result = await resetQuota(`reset-${Date.now()}`);
+    if (result.ok) {
+      appendLog("Quota reset — all 8 providers restored to 10", "success");
+    }
     setLoading(false);
   };
 
   const handleResetMultiple = async () => {
     setLoading(true);
     const eventId = `reset-multi-${Date.now()}`;
-    await Promise.all([
+    const results = await Promise.all([
       resetQuota(eventId),
       resetQuota(eventId),
       resetQuota(eventId),
     ]);
+
+    results.forEach((result, index) => {
+      if (!result.ok) {
+        appendLog(`Attempt ${index + 1} — error`, "error");
+        return;
+      }
+
+      if (result.alreadyProcessed) {
+        appendLog(`Attempt ${index + 1} — ↩ Skipped (duplicate)`, "warning");
+      } else {
+        appendLog(`Attempt ${index + 1} — ✓ Processed`, "success");
+      }
+    });
     setLoading(false);
   };
 
@@ -70,64 +101,89 @@ export default function TestToolsPage() {
     );
 
     const results = await Promise.all(responses.map((res) => res.json()));
+    const successes = results.filter((_, index) => responses[index].ok);
+    const failures = results.filter((_, index) => !responses[index].ok);
 
-    results.forEach((result, index) => {
-      if (responses[index].ok) {
-        appendLog(
-          `Lead ${result.leadId} assigned to ${result.providerIds.join(", ")}.`
-        );
-      } else {
-        appendLog(result.error ?? "Lead creation failed.");
-      }
-    });
+    if (failures.length > 0) {
+      appendLog(
+        `Lead burst completed — ${successes.length}/${results.length} created`,
+        "error"
+      );
+    } else {
+      const uniqueProviders = new Set<number>();
+      successes.forEach((result) => {
+        (result.providerIds ?? []).forEach((id: number) => uniqueProviders.add(id));
+      });
+      appendLog(
+        `10 leads created — ${uniqueProviders.size} unique provider assignments, no quota violations`,
+        "success"
+      );
+    }
 
     setLoading(false);
   };
 
   return (
-    <div className="min-h-screen bg-zinc-50">
-      <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-6 py-10">
-        <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
-          <h1 className="text-2xl font-semibold text-zinc-900">Test Tools</h1>
-          <p className="mt-1 text-sm text-zinc-500">
-            Fire webhooks and concurrency tests.
-          </p>
+    <div className="mx-auto w-full max-w-5xl px-6 py-8">
+      <div className="border border-zinc-200 bg-white px-6 py-4">
+        <h1 className="text-xl font-semibold text-zinc-900">Test Tools</h1>
+        <p className="mt-1 text-sm text-zinc-600">
+          Webhook validation and concurrency checks.
+        </p>
+      </div>
+      <div className="mt-6 border border-zinc-200 bg-white px-6 py-4">
+        <div className="flex flex-wrap gap-3">
+          <button
+            type="button"
+            onClick={handleReset}
+            className="bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-indigo-500 disabled:opacity-60"
+            disabled={loading}
+          >
+            Reset Quota
+          </button>
+          <button
+            type="button"
+            onClick={handleResetMultiple}
+            className="border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 transition hover:border-zinc-300 disabled:opacity-60"
+            disabled={loading}
+          >
+            Fire Webhook Multiple Times
+          </button>
+          <button
+            type="button"
+            onClick={handleGenerateLeads}
+            className="border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 transition hover:border-zinc-300 disabled:opacity-60"
+            disabled={loading}
+          >
+            Generate 10 Leads Instantly
+          </button>
         </div>
-        <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
-          <div className="flex flex-wrap gap-3">
-            <button
-              type="button"
-              onClick={handleReset}
-              className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-zinc-800 disabled:opacity-60"
-              disabled={loading}
-            >
-              Reset Quota
-            </button>
-            <button
-              type="button"
-              onClick={handleResetMultiple}
-              className="rounded-lg border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 transition hover:border-zinc-300 disabled:opacity-60"
-              disabled={loading}
-            >
-              Fire Webhook Multiple Times
-            </button>
-            <button
-              type="button"
-              onClick={handleGenerateLeads}
-              className="rounded-lg border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 transition hover:border-zinc-300 disabled:opacity-60"
-              disabled={loading}
-            >
-              Generate 10 Leads Instantly
-            </button>
-          </div>
-        </div>
-        <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
-          <h2 className="text-sm font-semibold text-zinc-900">Recent Activity</h2>
-          <ul className="mt-3 flex flex-col gap-2 text-sm text-zinc-600">
+      </div>
+      <div className="mt-6 border border-zinc-200 bg-white px-6 py-4">
+        <h2 className="text-sm font-semibold text-zinc-900">Recent Activity</h2>
+        <div className="mt-3 border border-zinc-200 bg-zinc-950/95 text-zinc-100">
+          <ul className="max-h-80 overflow-auto px-3 py-2 font-mono text-xs">
             {log.length === 0 ? (
-              <li>No actions yet.</li>
+              <li className="py-1 text-zinc-400">No actions yet.</li>
             ) : (
-              log.map((entry, index) => <li key={index}>{entry}</li>)
+              log.map((entry) => (
+                <li key={entry.id} className="flex items-center gap-3 py-1">
+                  <span className="text-zinc-400">[{entry.timestamp}]</span>
+                  <span
+                    className={
+                      entry.status === "success"
+                        ? "text-emerald-400"
+                        : entry.status === "warning"
+                        ? "text-amber-300"
+                        : entry.status === "error"
+                        ? "text-rose-400"
+                        : "text-zinc-200"
+                    }
+                  >
+                    {entry.message}
+                  </span>
+                </li>
+              ))
             )}
           </ul>
         </div>

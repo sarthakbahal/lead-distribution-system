@@ -115,3 +115,7 @@ assignments, and respects provider quotas.
 
 - Add telemetry/metrics for contention and assignment latency.
 - Add role-based authentication and audit trails for production usage.
+
+---
+Built by Sarthak Bahal — May 2026
+GitHub: github.com/sarthakbahal

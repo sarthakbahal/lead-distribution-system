@@ -17,6 +17,10 @@ export default function RequestServicePage() {
     serviceId: 1,
   });
   const [status, setStatus] = useState<string | null>(null);
+  const [result, setResult] = useState<{
+    leadId: number;
+    providerIds: number[];
+  } | null>(null);
   const [loading, setLoading] = useState(false);
 
   const handleChange = (
@@ -33,6 +37,7 @@ export default function RequestServicePage() {
     event.preventDefault();
     setLoading(true);
     setStatus(null);
+    setResult(null);
 
     try {
       const response = await fetch("/api/leads", {
@@ -47,39 +52,45 @@ export default function RequestServicePage() {
         return;
       }
 
-      setStatus(
-        `Lead ${payload.leadId} assigned to providers ${payload.providerIds.join(", ")}.`
-      );
-      setForm((prev) => ({
-        ...prev,
-        phoneNumber: "",
-        description: "",
-      }));
-    } catch (error) {
+      setResult({
+        leadId: payload.leadId,
+        providerIds: payload.providerIds,
+      });
+      setStatus(null);
+    } catch {
       setStatus("Request failed.");
     } finally {
       setLoading(false);
     }
   };
 
+  const handleReset = () => {
+    setForm({
+      name: "",
+      phoneNumber: "",
+      city: "",
+      description: "",
+      serviceId: 1,
+    });
+    setStatus(null);
+    setResult(null);
+  };
+
   return (
-    <div className="min-h-screen bg-zinc-50">
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-6 py-10">
-        <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
-          <h1 className="text-2xl font-semibold text-zinc-900">Request Service</h1>
-          <p className="mt-1 text-sm text-zinc-500">
-            Submit a lead to the distribution engine.
-          </p>
-        </div>
-        <form
-          className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm"
-          onSubmit={handleSubmit}
-        >
+    <div className="mx-auto w-full max-w-6xl px-6 py-8">
+      <div className="border border-zinc-200 bg-white px-6 py-4">
+        <h1 className="text-xl font-semibold text-zinc-900">Request Service</h1>
+        <p className="mt-1 text-sm text-zinc-600">
+          Submit a lead to the distribution engine and view its assignments.
+        </p>
+      </div>
+      <div className="mt-6 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+        <form className="border border-zinc-200 bg-white p-6" onSubmit={handleSubmit}>
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="flex flex-col gap-2 text-sm font-medium text-zinc-700">
               Name
               <input
-                className="rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-400 focus:outline-none"
+                className="border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none"
                 name="name"
                 value={form.name}
                 onChange={handleChange}
@@ -89,7 +100,7 @@ export default function RequestServicePage() {
             <label className="flex flex-col gap-2 text-sm font-medium text-zinc-700">
               Phone Number
               <input
-                className="rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-400 focus:outline-none"
+                className="border border-zinc-200 px-3 py-2 text-sm font-mono focus:border-zinc-500 focus:outline-none"
                 name="phoneNumber"
                 value={form.phoneNumber}
                 onChange={handleChange}
@@ -99,7 +110,7 @@ export default function RequestServicePage() {
             <label className="flex flex-col gap-2 text-sm font-medium text-zinc-700">
               City
               <input
-                className="rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-400 focus:outline-none"
+                className="border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none"
                 name="city"
                 value={form.city}
                 onChange={handleChange}
@@ -109,7 +120,7 @@ export default function RequestServicePage() {
             <label className="flex flex-col gap-2 text-sm font-medium text-zinc-700">
               Service
               <select
-                className="rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-400 focus:outline-none"
+                className="border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none"
                 name="serviceId"
                 value={form.serviceId}
                 onChange={handleChange}
@@ -125,23 +136,87 @@ export default function RequestServicePage() {
           <label className="mt-4 flex flex-col gap-2 text-sm font-medium text-zinc-700">
             Description
             <textarea
-              className="min-h-30 rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-400 focus:outline-none"
+              className="min-h-30 border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none"
               name="description"
               value={form.description}
               onChange={handleChange}
             />
           </label>
-          <div className="mt-6 flex items-center gap-3">
-            <button
-              type="submit"
-              className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-zinc-800 disabled:opacity-60"
-              disabled={loading}
-            >
-              {loading ? "Submitting..." : "Submit Lead"}
-            </button>
-            {status && <p className="text-sm text-zinc-600">{status}</p>}
-          </div>
+          {status && <p className="mt-3 text-sm text-red-600">{status}</p>}
+          <button
+            type="submit"
+            className="mt-4 w-full bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-indigo-500 disabled:opacity-60"
+            disabled={loading}
+          >
+            {loading ? "Submitting..." : "Submit Lead"}
+          </button>
+          {result && (
+            <div className="mt-5 border border-zinc-200 bg-zinc-50 px-4 py-3">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-semibold text-zinc-900">
+                  Lead submitted successfully
+                </p>
+                <span className="text-xs text-zinc-500 font-mono">
+                  #{result.leadId}
+                </span>
+              </div>
+              <div className="mt-3 overflow-hidden border border-zinc-200 bg-white">
+                <div className="grid grid-cols-[180px_1fr] border-b border-zinc-200 px-3 py-2 text-xs uppercase text-zinc-500">
+                  <span>Assigned providers</span>
+                  <span>Details</span>
+                </div>
+                <div className="grid grid-cols-[180px_1fr] px-3 py-2 text-sm">
+                  <span className="text-zinc-600">Providers</span>
+                  <span className="font-mono text-zinc-900">
+                    {result.providerIds.map((id) => `Provider ${id}`).join(", ")}
+                  </span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={handleReset}
+                className="mt-3 text-sm font-medium text-indigo-600"
+              >
+                Submit another
+              </button>
+            </div>
+          )}
         </form>
+        <aside className="border border-zinc-200 bg-white p-6">
+          <h2 className="text-sm font-semibold text-zinc-900">How it works</h2>
+          <p className="mt-2 text-sm text-zinc-600">
+            Mandatory assignments are always applied first. Remaining slots are
+            filled via the service pool in round-robin order.
+          </p>
+          <div className="mt-4 space-y-4 text-sm">
+            <div>
+              <p className="text-xs uppercase text-zinc-500">Mandatory rules</p>
+              <ul className="mt-2 space-y-1 text-zinc-700">
+                <li>Service 1 → Provider 1</li>
+                <li>Service 2 → Provider 5</li>
+                <li>Service 3 → Provider 1 + Provider 4</li>
+              </ul>
+            </div>
+            <div>
+              <p className="text-xs uppercase text-zinc-500">Fair allocation pools</p>
+              <ul className="mt-2 space-y-1 text-zinc-700">
+                <li>
+                  Service 1 pool: <span className="font-mono">P2, P3, P4</span>
+                </li>
+                <li>
+                  Service 2 pool: <span className="font-mono">P6, P7, P8</span>
+                </li>
+                <li>
+                  Service 3 pool: <span className="font-mono">P2, P3, P5, P6, P7, P8</span>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <p className="text-xs uppercase text-zinc-500">Assignment target</p>
+              <p className="mt-2 text-zinc-700">Each lead is assigned to exactly 3 providers.</p>
+            </div>
+          </div>
+        </aside>
       </div>
     </div>
   );

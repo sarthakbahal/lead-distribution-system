@@ -80,7 +80,7 @@ export async function createLeadWithAssignments(
           assignedProviders.push(providerId);
         }
 
-        let remainingSlots = 3 - assignedProviders.length;
+        const remainingSlots = 3 - assignedProviders.length;
         if (remainingSlots < 0) {
           throw new Error("Too many mandatory assignments configured.");
         }
