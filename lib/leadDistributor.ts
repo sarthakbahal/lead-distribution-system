@@ -26,7 +26,7 @@ const FAIR_POOLS: Record<number, number[]> = {
 };
 
 async function decrementQuota(
-  tx: PrismaClient,
+  tx: Prisma.TransactionClient,
   providerId: number
 ): Promise<boolean> {
   const result = await tx.provider.updateMany({
