@@ -21,7 +21,15 @@ export async function POST(request: Request) {
 
   try {
     const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-      const event = await tx.webhookEvent.create({
+      const existing = await tx.webhookEvent.findUnique({
+        where: { eventId },
+      });
+
+      if (existing) {
+        return { alreadyProcessed: true, updateCount: 0 };
+      }
+
+      await tx.webhookEvent.create({
         data: {
           eventId,
           type: RESET_TYPE,
@@ -32,19 +40,17 @@ export async function POST(request: Request) {
         data: { remainingQuota: DEFAULT_QUOTA },
       });
 
-      return { event, updateCount: updateResult.count };
+      return { alreadyProcessed: false, updateCount: updateResult.count };
     });
 
     return NextResponse.json({
       processed: true,
-      alreadyProcessed: false,
+      alreadyProcessed: result.alreadyProcessed,
       updatedProviders: result.updateCount,
     });
   } catch (error: unknown) {
-    if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === "P2002"
-    ) {
+    const errorCode = (error as { code?: string } | null)?.code;
+    if (errorCode === "P2002") {
       return NextResponse.json({
         processed: true,
         alreadyProcessed: true,

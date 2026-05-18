@@ -63,77 +63,86 @@ export default function RequestServicePage() {
   };
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-6 py-10">
-      <div>
-        <h1 className="text-2xl font-semibold">Request Service</h1>
-        <p className="text-sm text-muted-foreground">
-          Submit a lead to the distribution engine.
-        </p>
-      </div>
-      <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-        <label className="flex flex-col gap-2 text-sm">
-          Name
-          <input
-            className="rounded border border-zinc-200 px-3 py-2"
-            name="name"
-            value={form.name}
-            onChange={handleChange}
-            required
-          />
-        </label>
-        <label className="flex flex-col gap-2 text-sm">
-          Phone Number
-          <input
-            className="rounded border border-zinc-200 px-3 py-2"
-            name="phoneNumber"
-            value={form.phoneNumber}
-            onChange={handleChange}
-            required
-          />
-        </label>
-        <label className="flex flex-col gap-2 text-sm">
-          City
-          <input
-            className="rounded border border-zinc-200 px-3 py-2"
-            name="city"
-            value={form.city}
-            onChange={handleChange}
-            required
-          />
-        </label>
-        <label className="flex flex-col gap-2 text-sm">
-          Service
-          <select
-            className="rounded border border-zinc-200 px-3 py-2"
-            name="serviceId"
-            value={form.serviceId}
-            onChange={handleChange}
-          >
-            {SERVICES.map((service) => (
-              <option key={service.id} value={service.id}>
-                {service.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-col gap-2 text-sm">
-          Description
-          <textarea
-            className="min-h-[120px] rounded border border-zinc-200 px-3 py-2"
-            name="description"
-            value={form.description}
-            onChange={handleChange}
-          />
-        </label>
-        <button
-          type="submit"
-          className="rounded bg-black px-4 py-2 text-white disabled:opacity-60"
-          disabled={loading}
+    <div className="min-h-screen bg-zinc-50">
+      <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-6 py-10">
+        <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+          <h1 className="text-2xl font-semibold text-zinc-900">Request Service</h1>
+          <p className="mt-1 text-sm text-zinc-500">
+            Submit a lead to the distribution engine.
+          </p>
+        </div>
+        <form
+          className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm"
+          onSubmit={handleSubmit}
         >
-          {loading ? "Submitting..." : "Submit Lead"}
-        </button>
-      </form>
-      {status && <p className="text-sm text-zinc-700">{status}</p>}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="flex flex-col gap-2 text-sm font-medium text-zinc-700">
+              Name
+              <input
+                className="rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-400 focus:outline-none"
+                name="name"
+                value={form.name}
+                onChange={handleChange}
+                required
+              />
+            </label>
+            <label className="flex flex-col gap-2 text-sm font-medium text-zinc-700">
+              Phone Number
+              <input
+                className="rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-400 focus:outline-none"
+                name="phoneNumber"
+                value={form.phoneNumber}
+                onChange={handleChange}
+                required
+              />
+            </label>
+            <label className="flex flex-col gap-2 text-sm font-medium text-zinc-700">
+              City
+              <input
+                className="rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-400 focus:outline-none"
+                name="city"
+                value={form.city}
+                onChange={handleChange}
+                required
+              />
+            </label>
+            <label className="flex flex-col gap-2 text-sm font-medium text-zinc-700">
+              Service
+              <select
+                className="rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-400 focus:outline-none"
+                name="serviceId"
+                value={form.serviceId}
+                onChange={handleChange}
+              >
+                {SERVICES.map((service) => (
+                  <option key={service.id} value={service.id}>
+                    {service.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+          <label className="mt-4 flex flex-col gap-2 text-sm font-medium text-zinc-700">
+            Description
+            <textarea
+              className="min-h-30 rounded-lg border border-zinc-200 px-3 py-2 text-sm focus:border-zinc-400 focus:outline-none"
+              name="description"
+              value={form.description}
+              onChange={handleChange}
+            />
+          </label>
+          <div className="mt-6 flex items-center gap-3">
+            <button
+              type="submit"
+              className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-zinc-800 disabled:opacity-60"
+              disabled={loading}
+            >
+              {loading ? "Submitting..." : "Submit Lead"}
+            </button>
+            {status && <p className="text-sm text-zinc-600">{status}</p>}
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

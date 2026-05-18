@@ -1,4 +1,4 @@
-import { Prisma, PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 
 export type LeadInput = {
   name: string;
@@ -41,9 +41,13 @@ export async function createLeadWithAssignments(
   prisma: PrismaClient,
   input: LeadInput
 ): Promise<LeadAssignmentResult> {
-  try {
-    return await prisma.$transaction(
-      async (tx) => {
+  const maxRetries = 3;
+  let attempt = 0;
+
+  while (true) {
+    try {
+      return await prisma.$transaction(
+        async (tx: PrismaClient) => {
         const lead = await tx.lead.create({
           data: {
             name: input.name,
@@ -127,19 +131,33 @@ export async function createLeadWithAssignments(
           skipDuplicates: true,
         });
 
-        return { leadId: lead.id, providerIds: assignedProviders };
-      },
-      { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }
-    );
-  } catch (error) {
-    if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === "P2002"
-    ) {
-      throw new Error(
-        "Duplicate lead: phone number already exists for this service."
+          return { leadId: lead.id, providerIds: assignedProviders };
+        },
+        { isolationLevel: "Serializable" as any }
       );
+    } catch (error) {
+      const errorCode = (error as { code?: string } | null)?.code;
+
+      if (errorCode === "P2002") {
+        throw new Error(
+          "Duplicate lead: phone number already exists for this service."
+        );
+      }
+      const message = error instanceof Error ? error.message : "";
+
+      if (
+        attempt < maxRetries &&
+        (errorCode === "P2034" ||
+          message.includes("deadlock") ||
+          message.includes("write conflict"))
+      ) {
+        attempt += 1;
+        const delay = 50 * attempt;
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        continue;
+      }
+
+      throw error;
     }
-    throw error;
   }
 }

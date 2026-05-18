@@ -85,48 +85,52 @@ export default function TestToolsPage() {
   };
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-6 py-10">
-      <div>
-        <h1 className="text-2xl font-semibold">Test Tools</h1>
-        <p className="text-sm text-muted-foreground">
-          Fire webhooks and concurrency tests.
-        </p>
-      </div>
-      <div className="flex flex-wrap gap-3">
-        <button
-          type="button"
-          onClick={handleReset}
-          className="rounded bg-black px-4 py-2 text-white disabled:opacity-60"
-          disabled={loading}
-        >
-          Reset Quota
-        </button>
-        <button
-          type="button"
-          onClick={handleResetMultiple}
-          className="rounded border px-4 py-2 disabled:opacity-60"
-          disabled={loading}
-        >
-          Fire Webhook Multiple Times
-        </button>
-        <button
-          type="button"
-          onClick={handleGenerateLeads}
-          className="rounded border px-4 py-2 disabled:opacity-60"
-          disabled={loading}
-        >
-          Generate 10 Leads Instantly
-        </button>
-      </div>
-      <div className="rounded border p-4">
-        <h2 className="text-sm font-medium">Recent Activity</h2>
-        <ul className="mt-3 flex flex-col gap-2 text-sm text-zinc-600">
-          {log.length === 0 ? (
-            <li>No actions yet.</li>
-          ) : (
-            log.map((entry, index) => <li key={index}>{entry}</li>)
-          )}
-        </ul>
+    <div className="min-h-screen bg-zinc-50">
+      <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-6 py-10">
+        <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+          <h1 className="text-2xl font-semibold text-zinc-900">Test Tools</h1>
+          <p className="mt-1 text-sm text-zinc-500">
+            Fire webhooks and concurrency tests.
+          </p>
+        </div>
+        <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+          <div className="flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={handleReset}
+              className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-zinc-800 disabled:opacity-60"
+              disabled={loading}
+            >
+              Reset Quota
+            </button>
+            <button
+              type="button"
+              onClick={handleResetMultiple}
+              className="rounded-lg border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 transition hover:border-zinc-300 disabled:opacity-60"
+              disabled={loading}
+            >
+              Fire Webhook Multiple Times
+            </button>
+            <button
+              type="button"
+              onClick={handleGenerateLeads}
+              className="rounded-lg border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 transition hover:border-zinc-300 disabled:opacity-60"
+              disabled={loading}
+            >
+              Generate 10 Leads Instantly
+            </button>
+          </div>
+        </div>
+        <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+          <h2 className="text-sm font-semibold text-zinc-900">Recent Activity</h2>
+          <ul className="mt-3 flex flex-col gap-2 text-sm text-zinc-600">
+            {log.length === 0 ? (
+              <li>No actions yet.</li>
+            ) : (
+              log.map((entry, index) => <li key={index}>{entry}</li>)
+            )}
+          </ul>
+        </div>
       </div>
     </div>
   );
