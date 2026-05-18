@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 
 export type LeadInput = {
   name: string;
@@ -46,8 +46,8 @@ export async function createLeadWithAssignments(
 
   while (true) {
     try {
-      return await prisma.$transaction(
-        async (tx: PrismaClient) => {
+      const result = await prisma.$transaction(
+        async (tx: Prisma.TransactionClient) => {
         const lead = await tx.lead.create({
           data: {
             name: input.name,
@@ -133,8 +133,8 @@ export async function createLeadWithAssignments(
 
           return { leadId: lead.id, providerIds: assignedProviders };
         },
-        { isolationLevel: "Serializable" as any }
       );
+      return result as LeadAssignmentResult;
     } catch (error) {
       const errorCode = (error as { code?: string } | null)?.code;
 
