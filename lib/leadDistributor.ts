@@ -133,6 +133,7 @@ export async function createLeadWithAssignments(
 
           return { leadId: lead.id, providerIds: assignedProviders };
         },
+        { maxWait: 5000, timeout: 10000 }
       );
       return result as LeadAssignmentResult;
     } catch (error) {
